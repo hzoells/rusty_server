@@ -20,16 +20,16 @@ fn main() {
     let listener = TcpListener::bind(format!("127.0.0.1:{}",port)).unwrap();
     for stream in listener.incoming() {
         let stream = stream.unwrap();
-        handle_request(stream);
+        handle_request(stream,root);
     }
 
 }
 
-fn handle_request(mut stream: TcpStream){
+fn handle_request(mut stream: TcpStream,root: &str){
     let mut request_buffer = [0;1024];
     let mut response_buffer = [0;1024];
     stream.read(&mut request_buffer).unwrap();
-    let mut path = String::new();
+    let mut path = String::from(root);
     let mut status = parse_request(&request_buffer,&mut path);
     let mut resource = match status {
         RequestStatus::Pending => {
@@ -42,7 +42,6 @@ fn handle_request(mut stream: TcpStream){
                     if fs::metadata(&path).unwrap().is_dir() {
                         status =RequestStatus::BadRequest;            
                         fs::File::open(format!("src/error_pages/{}.html",get_code(&status))).unwrap()
-        
                     }else{
                         file
                     }
