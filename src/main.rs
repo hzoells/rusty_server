@@ -4,6 +4,8 @@ use std::io::prelude::*;
 use std::net::TcpStream;
 use std::net::TcpListener;
 use std::process;
+mod request;
+
 fn main() {
     /*
      * Parse command line arguments
