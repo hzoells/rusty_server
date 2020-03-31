@@ -1,7 +1,7 @@
+
 use std::fs;
 use std::io::prelude::*;
 use std::net::TcpStream;
-
 pub struct Request {
     path: String,
     status: RequestStatus,
