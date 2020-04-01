@@ -2,6 +2,7 @@
 use std::fs;
 use std::io::prelude::*;
 use std::net::TcpStream;
+use std::net::Shutdown;
 pub struct Request {
     path: String,
     status: RequestStatus,
@@ -20,6 +21,8 @@ impl Request {
         let mut request_buffer = [0;1024];
         self.stream.read(&mut request_buffer).unwrap();
         let request = String::from_utf8_lossy(&request_buffer[..]);//needed so that we have an owner
+        let request_line = &request[..request.find('\n').unwrap_or_else(|| 0)];
+        println!("{}",request_line);
         let request_parsed:Vec<&str> = request.split(|c| c==' ' || c=='\r' || c == '\n').collect();
         if request_parsed.len()<3 {
             self.status = RequestStatus::NotImplemented
@@ -60,7 +63,6 @@ impl Request {
                 }  
             },
             _ => {
-                println!("{}",format!("src/error_pages/{}.html",get_code(&(self.status))));
                 fs::File::open(format!("src/error_pages/{}.html",get_code(&(self.status)))).unwrap()
             }
         };
@@ -68,7 +70,7 @@ impl Request {
         let mut bytes_read = buf_size;
         while bytes_read == buf_size {
             bytes_read = resource.read(&mut response_buffer).unwrap();
-            self.stream.write(&mut response_buffer).unwrap();
+            self.stream.write(&mut response_buffer).unwrap_or_else(|error| {eprintln!("socket connection closed: unable to send file"); 0});
         }
         self.stream.flush().unwrap();
     }
@@ -92,7 +94,7 @@ impl Request {
             RequestStatus::Pending=>"",
         });
         let code = get_code(&(self.status));
-        self.stream.write(format!("HTTP/1.1 {} {}\r\n\r\n",code,reason_phrase).as_bytes()).unwrap();
+        self.stream.write(format!("HTTP/1.1 {} {}\r\n\r\n",code,reason_phrase).as_bytes()).unwrap_or_else(|error| {eprintln!("socket connection closed: unable to send status line"); 0});
         println!("{} {}",code,reason_phrase)
     }
 }
