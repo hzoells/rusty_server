@@ -10,7 +10,7 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new(stream: TcpStream, root: &str)->Request{
+    pub fn new(stream: TcpStream, root: &String)->Request{
         Request {
             path: String::from(root),
             status: RequestStatus::Pending,
